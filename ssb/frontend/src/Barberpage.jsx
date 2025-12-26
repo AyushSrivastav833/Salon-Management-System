@@ -23,7 +23,7 @@ function BarberPage() {
 
   // Initialize Socket.IO connection
   useEffect(() => {
-    socketRef.current = io("http://localhost:4000")
+    socketRef.current = io("https://salon-management-system-lba0.onrender.com")
 
     // Clean up on unmount
     return () => {
@@ -84,7 +84,8 @@ function BarberPage() {
 
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:4000/barber-appointments/${barberName}`)
+      const response = await fetch(`http://localhost:4000
+/barber-appointments/${barberName}`)
 
       if (!response.ok) {
         throw new Error("Failed to fetch appointments")
@@ -112,7 +113,8 @@ function BarberPage() {
 
   const handleAccept = async (id) => {
     try {
-      const response = await fetch(`http://localhost:4000/appointments/${id}/approve`, {
+      const response = await fetch(`http://localhost:4000
+/appointments/${id}/approve`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -138,7 +140,8 @@ function BarberPage() {
 
   const handleReject = async (id) => {
     try {
-      const response = await fetch(`http://localhost:4000/appointments/${id}`, {
+      const response = await fetch(`http://localhost:4000
+/appointments/${id}`, {
         method: "DELETE",
       })
 

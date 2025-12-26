@@ -36,7 +36,7 @@ function BarberProfile() {
     try {
       setLoading(true)
       // Get all barbers and find the one with matching name
-      const response = await fetch("http://localhost:4000/barbers")
+      const response = await fetch("https://salon-management-system-lba0.onrender.com/barbers")
 
       if (!response.ok) {
         throw new Error("Failed to fetch barber information")

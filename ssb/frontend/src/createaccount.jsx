@@ -110,11 +110,16 @@ function CreateAccount() {
 
     try {
       // Send data to the server
-      const response = await fetch("http://localhost:4000/create-account", {
-        method: "POST",
-        body: JSON.stringify(newBarber),
-        headers: { "Content-Type": "application/json" },
-      })
+     const response = await fetch(
+  "https://salon-management-system-lba0.onrender.com/create-account",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(newBarber),
+  }
+);
 
       if (!response.ok) {
         const errorData = await response.json()

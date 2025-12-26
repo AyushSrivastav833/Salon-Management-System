@@ -1,9 +1,17 @@
 "use client"
 
+
 import { useState, useEffect, useRef } from "react"
 import { FaPhone, FaCalendarAlt, FaUser, FaEnvelope, FaClock, FaBell } from "react-icons/fa"
 import { GiScissors } from "react-icons/gi"
 import { io } from "socket.io-client" // This requires socket.io-client to be installed
+const API_BASE = "https://salon-backend-dtum.onrender.com";
+
+
+
+
+
+
 
 function CustomerPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -33,7 +41,7 @@ function CustomerPage() {
 
   // Initialize Socket.IO connection
   useEffect(() => {
-    socketRef.current = io("http://localhost:4000")
+    socketRef.current = io("https://salon-management-system-lba0.onrender.com")
 
     // Clean up on unmount
     return () => {
@@ -72,66 +80,72 @@ function CustomerPage() {
   }, [userEmail])
 
   // Fetch barbers from the API
+const API_BASE = "https://salon-backend-dtum.onrender.com";
+
 useEffect(() => {
   const fetchBarbers = async () => {
     try {
-      setLoading(true)
-      const response = await fetch("http://localhost:4000/barbers")
+      console.log("FETCHING BARBERS...");
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE}/barbers`);
+
+      console.log("RESPONSE STATUS:", response.status);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch barbers")
+        throw new Error("Failed to fetch barbers");
       }
 
-      const data = await response.json()
+      const data = await response.json();
+      console.log("BARBERS DATA:", data);
 
-      // 🔥 NORMALIZE BACKEND DATA FOR FRONTEND
-      const formattedBarbers = data.map((barber) => ({
-  id: barber._id,
-  name: `${barber.firstName} ${barber.lastName}`,
-  email: barber.email,
-  phone: barber.phone,
-  shopName: barber.shopName,
-  experience: barber.experience,
-  specialties: barber.specialties || [],
-  image: barber.image || "https://placehold.co/300x300?text=Barber",
-  rating: barber.rating || 4.5,
-  reviews: barber.reviews || 50
-}))
+      setBarbers(
+        data.map((b) => ({
+          id: b._id,
+          name: `${b.firstName} ${b.lastName}`,
+          shopName: b.shopName,
+          experience: b.experience,
+          phone: b.phone,
+          email: b.email,
+          specialties: b.specialties || [],
+          rating: b.rating || 4.5,
+          reviews: b.reviews || 50,
+          image: b.image || "https://placehold.co/300x300?text=Barber",
+        }))
+      );
 
-
-      setBarbers(formattedBarbers)
-      setLoading(false)
+      setLoading(false);
     } catch (err) {
-      console.error("Error fetching barbers:", err)
-      setError("Failed to load barbers. Please try again later.")
-      setLoading(false)
+      console.error("FETCH ERROR:", err);
+      setLoading(false); // ⭐ THIS IS CRITICAL
     }
-  }
+  };
 
-  fetchBarbers()
-}, [])
+  fetchBarbers();
+}, []);
 
 
   // Fetch user appointments when email changes
-  const fetchUserAppointments = async (email) => {
-    if (!email) return
+ const fetchUserAppointments = async (email) => {
+  if (!email) return
 
-    try {
-      setLoadingAppointments(true)
-      const response = await fetch(`http://localhost:4000/user-appointments/${email}`)
+  setLoadingAppointments(true)
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch appointments")
-      }
+  try {
+    const response = await fetch(`${API_BASE}/user-appointments/${email}`)
+    
 
-      const data = await response.json()
-      setUserAppointments(data)
-      setLoadingAppointments(false)
-    } catch (err) {
-      console.error("Error fetching user appointments:", err)
-      setLoadingAppointments(false)
-    }
+    const data = await response.json() // 🔥 ALWAYS parse response
+
+    setUserAppointments(Array.isArray(data) ? data : [])
+  } catch (err) {
+    console.error("Error fetching user appointments:", err)
+    setUserAppointments([])
+  } finally {
+    setLoadingAppointments(false) // 🔥 GUARANTEED reset
   }
+}
+
 
   // Calculate min and max dates for booking (today to 10 days ahead)
   const getTodayDate = () => {
@@ -187,29 +201,33 @@ useEffect(() => {
       const serviceName = services.find((s) => s.id === formData.service)?.name || formData.service
 
       // Send appointment data to the server
-      const response = await fetch("http://localhost:4000/appointments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-         customerName: formData.name,
-  email: formData.email,
-  phone: formData.phone,
-  service: serviceName,
-  barber: formData.barber,
-  date: formData.date,
-  time: formData.time,
-  notes: formData.notes,
-        }),
-      })
+     const response = await fetch(`${API_BASE}/appointments`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    customerName: formData.name,
+    email: formData.email,
+    phone: formData.phone,
+    service: serviceName,
+    barber: formData.barber,
+    date: formData.date,
+    time: formData.time,
+    notes: formData.notes,
+  }),
+})
 
-      if (!response.ok) {
-        throw new Error("Failed to book appointment")
-      }
+if (!response.ok) {
+  throw new Error("Failed to book appointment")
+}
 
-      // Show success message
-      setBookingSuccess(true)
+// 🔥 THIS WAS MISSING
+const result = await response.json()
+console.log("Appointment response:", result)
+
+setBookingSuccess(true)
+
 
       // Fetch updated appointments
       fetchUserAppointments(formData.email)
@@ -253,13 +271,22 @@ useEffect(() => {
 
   const cancelAppointment = async (id) => {
   try {
-    await fetch(`http://localhost:4000/appointments/${id}`, {
-      method: "DELETE",
-    })
+    const response = await fetch(
+      `${API_BASE}/appointments/${id}`,
+      { method: "DELETE" }
+    )
 
-    fetchUserAppointments(userEmail)
+    if (!response.ok) {
+      throw new Error("Delete failed")
+    }
+
+    // ✅ REMOVE FROM UI IMMEDIATELY
+    setUserAppointments((prev) =>
+      prev.filter((appt) => appt._id !== id)
+    )
   } catch (err) {
     console.error("Cancel failed", err)
+    alert("Failed to cancel appointment")
   }
 }
 
@@ -367,6 +394,10 @@ useEffect(() => {
           )}
         </div>
       </header>
+
+
+
+
 
       <main className="flex-1">
         {/* Hero Section */}
