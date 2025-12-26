@@ -1,6 +1,3 @@
-"use client"
-
-
 import { useState, useEffect, useRef } from "react"
 import { FaPhone, FaCalendarAlt, FaUser, FaEnvelope, FaClock, FaBell } from "react-icons/fa"
 import { GiScissors } from "react-icons/gi"
