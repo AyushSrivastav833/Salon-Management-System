@@ -132,9 +132,22 @@ app.get("/barbers", async (req, res) => {
 
 // Create appointment
 app.post("/appointments", async (req, res) => {
-  const appointment = await Appointment.create(req.body)
-  io.to(`barber:${req.body.barber}`).emit("new_appointment", appointment)
-  res.status(201).json(appointment)
+  try {
+    const appointment = new Appointment(req.body)
+    await appointment.save()
+
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully",
+      appointment,
+    })
+  } catch (error) {
+    console.error("Appointment error:", error)
+    res.status(500).json({
+      success: false,
+      message: "Failed to book appointment",
+    })
+  }
 })
 
 // Get barber appointments
